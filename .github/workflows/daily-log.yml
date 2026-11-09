@@ -23,38 +23,27 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate random activity records
-        env:
-          GITHUB_USERNAME: ${{ vars.MY_GITHUB_USERNAME }}
+      - name: Generate random practice records
         run: python daily_log.py
 
-      - name: Commit each activity separately
+      - name: Create separate commits
         shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          if [ ! -d logs ]; then
-            echo "No activity records generated."
-            exit 0
-          fi
 
           count=0
 
           while IFS= read -r -d '' file; do
             git add -- "$file"
 
-            if git diff --cached --quiet; then
-              continue
-            fi
-
-            git commit -m "docs: record development activity"
+            git commit -m "chore: add Git automation practice record"
             count=$((count + 1))
 
-          done < <(find logs -type f -name 'event-*.md' -print0)
+          done < <(find logs -type f -name 'commit-*.md' -print0)
 
           if [ "$count" -gt 0 ]; then
             git push
           fi
 
-          echo "New activity commits: $count"
+          echo "Total separate commits created: $count"
