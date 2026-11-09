@@ -5,45 +5,41 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 
 IST = ZoneInfo("Asia/Kolkata")
-today = datetime.now(IST).date()
+now = datetime.now(IST)
 
-# Randomly select 1 to 10 commits
+# Randomly choose between 1 and 10
 commit_count = random.randint(1, 10)
 
-folder = Path("logs") / f"practice-{today}"
+# Unique folder for every workflow execution
+run_id = now.strftime("%Y-%m-%d-%H-%M-%S")
+folder = Path("logs") / f"practice-{run_id}"
+
 folder.mkdir(parents=True, exist_ok=True)
 
-# Prevent duplicate generation on the same day
-existing = list(folder.glob("commit-*.md"))
-
-if existing:
-    print(f"Already generated {len(existing)} practice commits.")
-    raise SystemExit(0)
-
 print(f"Random commit target: {commit_count}")
+print(f"Run ID: {run_id}")
 
 for number in range(1, commit_count + 1):
 
     content = f"""# Git Automation Practice
 
-Date: {today}
-Practice commit: {number}/{commit_count}
+Date: {now.date()}
+Run: {run_id}
+Practice record: {number}/{commit_count}
 
-This is a synthetic learning record created
-to experiment with Python and GitHub Actions.
-
-Topics:
-- Git commit automation
-- Python scripting
+Learning topics:
+- Python automation
+- Git commits
 - GitHub Actions
-- Automated repository updates
+- CI/CD workflows
 
-Record number: {number}
+This is a synthetic learning record.
 """
 
     file = folder / f"commit-{number:02d}.md"
+
     file.write_text(content, encoding="utf-8")
 
-    print(f"Generated: {file}")
+    print(f"Created: {file}")
 
-print(f"Successfully generated {commit_count} practice records.")
+print(f"Successfully generated {commit_count} records.")
