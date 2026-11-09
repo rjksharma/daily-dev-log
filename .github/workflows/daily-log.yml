@@ -4,7 +4,6 @@ name: Daily Development Log
 on:
   schedule:
     - cron: "30 19 * * *"
-
   workflow_dispatch:
 
 permissions:
@@ -17,33 +16,39 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          ref: main
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Generate random practice records
+      - name: Generate practice records
         run: python daily_log.py
+
+      - name: Configure Git identity
+        env:
+          COMMIT_EMAIL: ${{ vars.COMMIT_EMAIL }}
+        run: |
+          git config user.name "rjksharma"
+          git config user.email "$COMMIT_EMAIL"
 
       - name: Create separate commits
         shell: bash
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
           count=0
 
           while IFS= read -r -d '' file; do
             git add -- "$file"
 
-            git commit -m "chore: add Git automation practice record"
+            git commit -m "chore: Git automation practice record"
             count=$((count + 1))
 
           done < <(find logs -type f -name 'commit-*.md' -print0)
 
-          if [ "$count" -gt 0 ]; then
-            git push
-          fi
+          echo "Commits created: $count"
 
-          echo "Total separate commits created: $count"
+          if [ "$count" -gt 0 ]; then
+            git push origin HEAD:main
+          fi
