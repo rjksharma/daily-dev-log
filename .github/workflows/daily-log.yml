@@ -16,8 +16,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          ref: main
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -42,13 +40,19 @@ jobs:
           while IFS= read -r -d '' file; do
             git add -- "$file"
 
+            if git diff --cached --quiet; then
+              continue
+            fi
+
             git commit -m "chore: Git automation practice record"
             count=$((count + 1))
 
           done < <(find logs -type f -name 'commit-*.md' -print0)
 
-          echo "Commits created: $count"
+          echo "Total new commits: $count"
 
           if [ "$count" -gt 0 ]; then
             git push origin HEAD:main
+          else
+            echo "No new records to commit."
           fi
