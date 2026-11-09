@@ -7,7 +7,9 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 username = os.environ["GITHUB_USERNAME"]
-today = datetime.now(ZoneInfo("Asia/Kolkata")).date()
+ist = ZoneInfo("Asia/Kolkata")
+
+today = datetime.now(ist).date()
 target = today - timedelta(days=1)
 
 headers = {
@@ -36,7 +38,7 @@ for page in range(1, 11):
     oldest = min(
         datetime.fromisoformat(
             e["created_at"].replace("Z", "+00:00")
-        ).astimezone(ZoneInfo("Asia/Kolkata")).date()
+        ).astimezone(ist).date()
         for e in batch
     )
 
@@ -46,11 +48,11 @@ for page in range(1, 11):
 activities = []
 
 for event in events:
-    time = datetime.fromisoformat(
+    event_time = datetime.fromisoformat(
         event["created_at"].replace("Z", "+00:00")
-    ).astimezone(ZoneInfo("Asia/Kolkata"))
+    ).astimezone(ist)
 
-    if time.date() != target:
+    if event_time.date() != target:
         continue
 
     event_type = event["type"]
@@ -71,31 +73,30 @@ for event in events:
 
     if description:
         activities.append(
-            f"- {time.strftime('%H:%M IST')} — "
+            f"- {event_time.strftime('%H:%M IST')} — "
             f"{description} in `{repo}`"
         )
-
-if not activities:
-    print("No public activity found. Skipping commit.")
-    raise SystemExit(0)
 
 folder = Path("logs")
 folder.mkdir(exist_ok=True)
 
 file = folder / f"{target}.md"
 
+if activities:
+    activity_text = "\n".join(activities)
+else:
+    activity_text = (
+        "No public GitHub activity was found for this date. "
+        "This is an automated status record, not a development contribution."
+    )
+
 content = (
     f"# Development Activity — {target}\n\n"
     f"GitHub user: @{username}\n\n"
-    "## Actual GitHub activity\n\n"
-    + "\n".join(activities)
-    + "\n"
+    "## Activity Report\n\n"
+    f"{activity_text}\n"
 )
 
-if file.exists() and file.read_text(encoding="utf-8") == content:
-    print("Already recorded. Skipping.")
-    raise SystemExit(0)
-
 file.write_text(content, encoding="utf-8")
-print(f"Created {file}")
-  
+
+print(f"Successfully generated: {file}")
