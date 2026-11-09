@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate log
         env:
-          GITHUB_USERNAME: ${{ vars.GITHUB_USERNAME }}
+          GITHUB_USERNAME: ${{ vars.MY_GITHUB_USERNAME }}
         run: python daily_log.py
 
       - name: Commit and push
