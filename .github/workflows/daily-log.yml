@@ -4,6 +4,7 @@ name: Daily Development Log
 on:
   schedule:
     - cron: "30 19 * * *"
+
   workflow_dispatch:
 
 permissions:
@@ -14,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -22,23 +23,38 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Generate log
+      - name: Generate random activity records
         env:
           GITHUB_USERNAME: ${{ vars.MY_GITHUB_USERNAME }}
         run: python daily_log.py
 
-      - name: Commit and push
+      - name: Commit each activity separately
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add logs/
-
-          if git diff --cached --quiet; then
-            echo "Nothing new to commit"
+          if [ ! -d logs ]; then
+            echo "No activity records generated."
             exit 0
           fi
 
-          git commit -m "docs: update daily development log"
-          git push
-  
+          count=0
+
+          while IFS= read -r -d '' file; do
+            git add -- "$file"
+
+            if git diff --cached --quiet; then
+              continue
+            fi
+
+            git commit -m "docs: record development activity"
+            count=$((count + 1))
+
+          done < <(find logs -type f -name 'event-*.md' -print0)
+
+          if [ "$count" -gt 0 ]; then
+            git push
+          fi
+
+          echo "New activity commits: $count"
